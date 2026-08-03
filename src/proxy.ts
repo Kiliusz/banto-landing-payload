@@ -48,7 +48,12 @@ export function proxy(request: NextRequest) {
 
   if (header?.startsWith('Basic ')) {
     try {
-      const decoded = atob(header.slice(6))
+      // atob() zwraca bajty jako znaki latin-1, a przeglądarka koduje
+      // „login:hasło" w UTF-8. Bez tego kroku poprawne hasło z polskimi
+      // znakami byłoby odrzucane.
+      const bytes = Uint8Array.from(atob(header.slice(6)), (c) => c.charCodeAt(0))
+      const decoded = new TextDecoder('utf-8').decode(bytes)
+
       if (safeEqual(decoded, CREDENTIALS)) {
         const response = NextResponse.next()
         response.headers.set('X-Robots-Tag', 'noindex, nofollow')
