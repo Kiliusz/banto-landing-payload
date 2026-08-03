@@ -43,15 +43,27 @@ PORT=3000
 NEXT_PUBLIC_SERVER_URL=https://stage.banto.pl
 PAYLOAD_SECRET=<openssl rand -base64 32>
 PREVIEW_SECRET=<openssl rand -hex 16>
-POSTGRES_PASSWORD=<długie losowe hasło>
+POSTGRES_PASSWORD=<długie losowe hasło, bez znaków / + = @ :>
+
+# login:hasło — chowa całe stage za oknem logowania przeglądarki.
+# Puste = serwis otwarty (tak zostawiamy na produkcji).
+STAGE_BASIC_AUTH=
 
 # opcjonalnie — bez tego leady zostają tylko w bazie
 MAILERLITE_API_KEY=
 MAILERLITE_GROUP_ID=
 ```
 
-`NEXT_PUBLIC_SERVER_URL` jest wkompilowywane w bundle, więc trafia do obrazu
-jako `build arg` — po zmianie domeny konieczny jest **pełny rebuild**, nie sam restart.
+Trzy rzeczy, o które łatwo się potknąć:
+
+1. **`NEXT_PUBLIC_SERVER_URL` jest wkompilowywane w bundle**, więc trafia do obrazu
+   jako `build arg` — po zmianie domeny konieczny jest **pełny rebuild**, nie sam restart.
+2. **`POSTGRES_PASSWORD` ląduje w connection stringu** (`postgres://banto:HASŁO@postgres:5432/banto`),
+   więc nie może zawierać `/ + = @ :`. Bezpieczny generator:
+   `LC_ALL=C tr -dc 'A-Za-z0-9' < /dev/urandom | head -c 32`
+3. **Sama obecność zmiennej w panelu nie wystarczy.** Dokploy zapisuje zawartość tej
+   zakładki jako plik `.env` używany do podstawień `${...}` w compose. Do kontenera
+   dociera wyłącznie to, co jest wypisane w sekcji `environment:` usługi.
 
 ---
 
@@ -91,6 +103,26 @@ Migrating: 20260802_204638_initial
 Migrated:  20260802_204638_initial (75ms)
 ✓ Ready
 ```
+
+---
+
+## 5a. Basic auth na stage
+
+Cały serwis — łącznie z `/admin`, `/api` i sitemapą — chowa się za oknem logowania
+przeglądarki, gdy ustawisz `STAGE_BASIC_AUTH` w formacie `login:hasło`.
+Odpowiada za to `src/proxy.ts`; dodatkowo dokłada nagłówek
+`X-Robots-Tag: noindex, nofollow`, żeby stage nie trafił do wyszukiwarek.
+
+Poza zabezpieczeniem zostaje wyłącznie `/health` — Docker nie wysyła nagłówka
+`Authorization`, więc healthcheck kontenera musiał mieć własne, jawne wejście.
+Ten endpoint zwraca tylko `{"status":"ok"}`.
+
+Na produkcji po prostu **nie ustawiaj tej zmiennej** — żadna zmiana w kodzie
+nie jest potrzebna.
+
+Świadomie nie użyliśmy middleware'u Traefika: ta sama instancja obsługuje inne
+serwisy (`banto-frontend`), a błąd w `dynamic/middlewares.yml` potrafi położyć
+routing wszystkim naraz.
 
 ---
 
