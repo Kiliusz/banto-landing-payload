@@ -4,7 +4,6 @@
 #
 # W Dokploy ustaw w zakładce „Environment" (te zmienne wstrzykuje Compose):
 #   NEXT_PUBLIC_SERVER_URL=https://stage.banto.pl
-#   DOMAIN=stage.banto.pl    (potrzebne tylko przy ręcznych etykietach Traefika niżej)
 #   PAYLOAD_SECRET=<openssl rand -base64 32>
 #   PREVIEW_SECRET=<openssl rand -hex 16>
 #   POSTGRES_PASSWORD=<długie hasło>
@@ -43,14 +42,8 @@ services:
       - dokploy-network
       - internal
     labels:
-      # Dokploy dopisuje własne etykiety Traefika po dodaniu domeny w UI.
-      # Jeśli wolisz konfigurować ręcznie, odkomentuj poniższe:
-      # - traefik.enable=true
-      # - traefik.http.routers.banto.rule=Host(`${DOMAIN}`)
-      # - traefik.http.routers.banto.entrypoints=websecure
-      # - traefik.http.routers.banto.tls.certresolver=letsencrypt
-      # - traefik.http.services.banto.loadbalancer.server.port=3000
-      # - traefik.docker.network=dokploy-network
+      # Etykiety Traefika (host, entrypoint, certyfikat) dopisuje Dokploy
+      # na podstawie domeny skonfigurowanej w zakładce „Domains".
       - app=banto-landing
 
   postgres:
