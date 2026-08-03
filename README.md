@@ -3,7 +3,7 @@
 Payload CMS 3.87 · Next.js 16 (App Router) · React 19 · Tailwind CSS 4 · PostgreSQL 17.
 
 Landing budowany z bloków w panelu + blog generowany statycznie (SSG/ISR).
-Deploy: VPS z Dokploy, przez `docker-compose.dokploy.yml`.
+Deploy: VPS z Dokploy, przez `docker-compose-stage.yml`.
 
 ---
 

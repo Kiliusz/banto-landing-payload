@@ -1,10 +1,10 @@
 # ──────────────────────────────────────────────────────────────────────────────
-# Produkcja — Dokploy → Create → Compose → Provider: Git → Compose Path:
-#   ./docker-compose.dokploy.yml
+# Środowisko stage — Dokploy → Compose → Compose Path: ./docker-compose-stage.yml
+# Deploy leci automatycznie po każdym pushu do gałęzi `main` (Trigger: On Push).
 #
 # W Dokploy ustaw w zakładce „Environment" (te zmienne wstrzykuje Compose):
-#   DOMAIN=banto.pl
-#   NEXT_PUBLIC_SERVER_URL=https://banto.pl
+#   NEXT_PUBLIC_SERVER_URL=https://stage.banto.pl
+#   DOMAIN=stage.banto.pl    (potrzebne tylko przy ręcznych etykietach Traefika niżej)
 #   PAYLOAD_SECRET=<openssl rand -base64 32>
 #   PREVIEW_SECRET=<openssl rand -hex 16>
 #   POSTGRES_PASSWORD=<długie hasło>

@@ -1,29 +1,34 @@
 # Deploy na VPS z Dokploy
 
-Cel: `https://banto.pl` na jednym VPS-ie, aplikacja + Postgres w jednym stacku Compose,
-HTTPS z Let's Encrypt przez Traefika, uploady i baza na wolumenach.
+Aplikacja + Postgres w jednym stacku Compose, HTTPS z Let's Encrypt przez Traefika,
+uploady i baza na wolumenach. Deploy leci **automatycznie po pushu do `main`**.
+
+## Aktualne środowisko
+
+| | |
+| --- | --- |
+| Dokploy | <https://alt.kbmprojekt.pl> → projekt **banto** → **landing-payload** |
+| Repozytorium | `Kiliusz/banto-landing-payload`, gałąź `main` |
+| Compose Path | `./docker-compose-stage.yml` |
+| Trigger | **On Push** + **Autodeploy** włączone |
+| Domena | `stage.banto.pl` |
 
 ---
 
 ## 1. Przygotowanie repozytorium
 
-```bash
-git init && git add -A && git commit -m "banto landing na Payload CMS"
-git remote add origin git@github.com:<konto>/banto-landing.git
-git push -u origin main
-```
-
-Sprawdź, że w repo są `src/migrations/` (schemat bazy) i `package-lock.json`,
-a **nie ma** `.env`.
+Repo musi zawierać `src/migrations/` (schemat bazy) i `package-lock.json`,
+a **nie może** zawierać `.env`.
 
 ---
 
-## 2. Nowy projekt w Dokploy
+## 2. Usługa w Dokploy
 
 1. **Create → Compose**
-2. **Provider:** Git → repozytorium + gałąź `main`
-3. **Compose Path:** `./docker-compose.dokploy.yml`
-4. Zapisz.
+2. **Provider:** GitHub → repozytorium + gałąź `main`
+3. **Compose Path:** `./docker-compose-stage.yml`
+4. **Trigger Type:** `On Push`, przełącznik **Autodeploy** włączony
+5. Zapisz.
 
 ---
 
@@ -32,8 +37,10 @@ a **nie ma** `.env`.
 Zakładka **Environment**:
 
 ```env
-DOMAIN=banto.pl
-NEXT_PUBLIC_SERVER_URL=https://banto.pl
+NODE_ENV=production
+PORT=3000
+
+NEXT_PUBLIC_SERVER_URL=https://stage.banto.pl
 PAYLOAD_SECRET=<openssl rand -base64 32>
 PREVIEW_SECRET=<openssl rand -hex 16>
 POSTGRES_PASSWORD=<długie losowe hasło>
@@ -54,24 +61,28 @@ Zakładka **Domains → Add Domain**:
 
 | Pole | Wartość |
 | --- | --- |
-| Host | `banto.pl` |
+| Host | `stage.banto.pl` |
 | Service Name | `web` |
 | Container Port | `3000` |
 | HTTPS | włączone, certyfikat `letsencrypt` |
 
-Dokploy sam dopisze etykiety Traefika. W DNS ustaw rekord `A` na IP serwera
+Dokploy sam dopisze etykiety Traefika. Rekord DNS musi wskazywać na IP serwera
 **przed** deployem — inaczej Let's Encrypt nie wystawi certyfikatu.
+
+Jeśli domena stoi za Cloudflare z włączonym proxy (pomarańczowa chmurka),
+ustaw tryb SSL na **Full (strict)**. Przy „Flexible" Traefik dostanie ruch po HTTP
+i wpadniecie w pętlę przekierowań.
 
 ---
 
 ## 5. Deploy
 
-**Deploy**. Pierwsze uruchomienie:
+Po pushu do `main` Dokploy startuje sam. Ręcznie: przycisk **Deploy**.
 
 1. build obrazu (bez dostępu do bazy — to zamierzone),
 2. start Postgresa i czekanie na healthcheck,
 3. start aplikacji → **migracje wykonują się automatycznie**,
-4. `https://banto.pl` odpowiada.
+4. `https://stage.banto.pl` odpowiada.
 
 W logach powinno pojawić się:
 
@@ -85,7 +96,7 @@ Migrated:  20260802_204638_initial (75ms)
 
 ## 6. Pierwsze logowanie i treści
 
-1. Wejdź na `https://banto.pl/admin` — zobaczysz formularz założenia pierwszego konta.
+1. Wejdź na `https://stage.banto.pl/admin` — zobaczysz formularz założenia pierwszego konta.
 2. Załóż administratora.
 3. Uzupełnij **Ustawienia serwisu**, **Nagłówek**, **Stopkę**.
 4. Utwórz stronę o slugu `home` i złóż ją z bloków.
@@ -124,7 +135,7 @@ ręcznie zostaje tylko wolumen `media`.
 
 ## 8. Aktualizacje
 
-`git push` → **Deploy** w Dokploy. Migracje zaskoczą same przy starcie.
+`git push` do `main` → Dokploy sam buduje i wdraża. Migracje zaskoczą przy starcie kontenera.
 Zmiany schematu zawsze commituj razem z migracją:
 
 ```bash
@@ -137,7 +148,7 @@ npx payload migrate:create nazwa-zmiany
 
 **Domena nie odpowiada (502 / brak trasy).**
 Usługa `web` musi być w sieci `dokploy-network`. Jest to zapisane w
-`docker-compose.dokploy.yml`; jeśli sieć nie istnieje, utwórz ją:
+`docker-compose-stage.yml`; jeśli sieć nie istnieje, utwórz ją:
 `docker network create dokploy-network`.
 
 **Zdjęcia się nie ładują po redeployu.**
