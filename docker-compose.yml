@@ -1,0 +1,28 @@
+# Lokalne środowisko developerskie — sama baza.
+# Aplikację uruchamiasz na hoście: npm run dev
+#
+#   docker compose up -d        # postgres na 127.0.0.1:5432
+#   docker compose down         # stop (dane zostają w wolumenie)
+#   docker compose down -v      # stop + skasowanie danych
+
+services:
+  postgres:
+    image: postgres:17-alpine
+    container_name: banto-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: banto
+      POSTGRES_PASSWORD: banto
+      POSTGRES_DB: banto
+    ports:
+      - '127.0.0.1:5432:5432'
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ['CMD-SHELL', 'pg_isready -U banto -d banto']
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+volumes:
+  pgdata:

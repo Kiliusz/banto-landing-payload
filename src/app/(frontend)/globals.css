@@ -1,0 +1,133 @@
+@import 'tailwindcss';
+@plugin "@tailwindcss/typography";
+
+@source '../../**/*.{ts,tsx}';
+
+/* ─────────────────────────────────────────────────────────────────────────────
+   banto — design tokens
+   Kolory i typografia przeniesione 1:1 z Figmy (banto-landing) oraz z
+   prototypu aplikacji (banto-proto/src/styles/theme.css).
+   ───────────────────────────────────────────────────────────────────────────── */
+
+@theme {
+  /* Marka */
+  --color-blue: #0149fc;
+  --color-blue-dark: #0139c9;
+  --color-blue-soft: #e8efff;
+  --color-pink: #fd589f;
+  --color-pink-soft: #ffe9f2;
+  --color-lime: #a9e717;
+  --color-lime-soft: #f0fbd6;
+
+  /* Neutralne */
+  --color-ink: #0a0a0a;
+  --color-ink-soft: #161616;
+  --color-muted: #6b6b6b;
+  --color-muted-light: #9a9a9a;
+  --color-cream: #f4f4f4;
+  --color-line: #e4e4e4;
+
+  /* Typografia */
+  --font-display: var(--font-baloo), 'Baloo 2', ui-rounded, system-ui, sans-serif;
+  --font-sans: var(--font-inter), Inter, ui-sans-serif, system-ui, sans-serif;
+
+  /* Zaokrąglenia — prototyp używa mocno zaokrąglonych kształtów */
+  --radius-banto: 1.25rem;
+  --radius-banto-lg: 1.75rem;
+  --radius-banto-xl: 2.25rem;
+
+  /* Cienie */
+  --shadow-banto: 0 24px 60px -30px rgb(20 30 60 / 0.25);
+  --shadow-banto-sm: 0 10px 30px -18px rgb(20 30 60 / 0.35);
+
+  /* Kontener */
+  --container-page: 76rem;
+}
+
+@layer base {
+  :root {
+    color-scheme: light;
+  }
+
+  html {
+    scroll-behavior: smooth;
+    -webkit-text-size-adjust: 100%;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    html {
+      scroll-behavior: auto;
+    }
+  }
+
+  body {
+    background-color: white;
+    color: var(--color-ink);
+    font-family: var(--font-sans);
+    -webkit-font-smoothing: antialiased;
+    text-rendering: optimizeLegibility;
+  }
+
+  h1,
+  h2,
+  h3 {
+    font-family: var(--font-display);
+    font-weight: 800;
+    letter-spacing: -0.02em;
+    text-wrap: balance;
+  }
+
+  /* Widoczny focus — dzieciaki i rodzice bywają na klawiaturze/czytniku ekranu */
+  :where(a, button, input, textarea, select, summary):focus-visible {
+    outline: 3px solid var(--color-blue);
+    outline-offset: 2px;
+    border-radius: 0.5rem;
+  }
+
+  ::selection {
+    background: var(--color-lime);
+    color: var(--color-ink);
+  }
+}
+
+@layer components {
+  /* Wyróżniony fragment nagłówka (składnia *gwiazdek* w CMS-ie) */
+  .accent {
+    color: var(--color-pink);
+  }
+
+  /* Treść wpisu blogowego */
+  .prose-banto {
+    --tw-prose-body: var(--color-ink-soft);
+    --tw-prose-headings: var(--color-ink);
+    --tw-prose-links: var(--color-blue);
+    --tw-prose-bold: var(--color-ink);
+    --tw-prose-quotes: var(--color-ink);
+    --tw-prose-quote-borders: var(--color-pink);
+    --tw-prose-bullets: var(--color-blue);
+    --tw-prose-counters: var(--color-blue);
+    --tw-prose-hr: var(--color-line);
+    --tw-prose-code: var(--color-ink);
+    --tw-prose-pre-bg: #0f172a;
+  }
+
+  .prose-banto :is(h2, h3, h4) {
+    font-family: var(--font-display);
+    letter-spacing: -0.02em;
+  }
+
+  .prose-banto a {
+    text-underline-offset: 3px;
+    text-decoration-thickness: 2px;
+  }
+}
+
+@layer utilities {
+  .text-balance {
+    text-wrap: balance;
+  }
+
+  .text-pretty {
+    text-wrap: pretty;
+  }
+}

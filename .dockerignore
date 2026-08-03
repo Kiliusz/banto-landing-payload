@@ -1,0 +1,14 @@
+node_modules
+.next
+.git
+.github
+media
+public/media
+*.md
+!README.md
+.env
+.env.*
+!.env.example
+.DS_Store
+docker-compose*.yml
+Dockerfile

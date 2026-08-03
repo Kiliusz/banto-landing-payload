@@ -1,0 +1,84 @@
+# ──────────────────────────────────────────────────────────────────────────────
+# Produkcja — Dokploy → Create → Compose → Provider: Git → Compose Path:
+#   ./docker-compose.dokploy.yml
+#
+# W Dokploy ustaw w zakładce „Environment" (te zmienne wstrzykuje Compose):
+#   DOMAIN=banto.pl
+#   NEXT_PUBLIC_SERVER_URL=https://banto.pl
+#   PAYLOAD_SECRET=<openssl rand -base64 32>
+#   PREVIEW_SECRET=<openssl rand -hex 16>
+#   POSTGRES_PASSWORD=<długie hasło>
+#   MAILERLITE_API_KEY=      (opcjonalnie)
+#   MAILERLITE_GROUP_ID=     (opcjonalnie)
+#
+# Domenę dodaj w Dokploy → Domains (service: web, port 3000) — Dokploy sam
+# dopisze etykiety Traefika i certyfikat Let's Encrypt.
+# ──────────────────────────────────────────────────────────────────────────────
+
+services:
+  web:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      args:
+        # UWAGA: Next wkompilowuje NEXT_PUBLIC_* w bundle, więc adres musi być
+        # znany już przy budowaniu obrazu — nie wystarczy podać go w runtime.
+        NEXT_PUBLIC_SERVER_URL: ${NEXT_PUBLIC_SERVER_URL}
+    restart: unless-stopped
+    depends_on:
+      postgres:
+        condition: service_healthy
+    environment:
+      NODE_ENV: production
+      DATABASE_URL: postgres://banto:${POSTGRES_PASSWORD}@postgres:5432/banto
+      PAYLOAD_SECRET: ${PAYLOAD_SECRET}
+      PREVIEW_SECRET: ${PREVIEW_SECRET}
+      NEXT_PUBLIC_SERVER_URL: ${NEXT_PUBLIC_SERVER_URL}
+      MAILERLITE_API_KEY: ${MAILERLITE_API_KEY:-}
+      MAILERLITE_GROUP_ID: ${MAILERLITE_GROUP_ID:-}
+    volumes:
+      # Uploady z panelu — muszą przeżyć redeploy
+      - media:/app/media
+    networks:
+      - dokploy-network
+      - internal
+    labels:
+      # Dokploy dopisuje własne etykiety Traefika po dodaniu domeny w UI.
+      # Jeśli wolisz konfigurować ręcznie, odkomentuj poniższe:
+      # - traefik.enable=true
+      # - traefik.http.routers.banto.rule=Host(`${DOMAIN}`)
+      # - traefik.http.routers.banto.entrypoints=websecure
+      # - traefik.http.routers.banto.tls.certresolver=letsencrypt
+      # - traefik.http.services.banto.loadbalancer.server.port=3000
+      # - traefik.docker.network=dokploy-network
+      - app=banto-landing
+
+  postgres:
+    image: postgres:17-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: banto
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_DB: banto
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    networks:
+      - internal
+    healthcheck:
+      test: ['CMD-SHELL', 'pg_isready -U banto -d banto']
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 20s
+
+volumes:
+  pgdata:
+  media:
+
+networks:
+  # Sieć Traefika zarządzana przez Dokploy — bez niej domena nie zadziała.
+  dokploy-network:
+    external: true
+  # Baza nie jest wystawiona na zewnątrz; widzi ją tylko kontener aplikacji.
+  internal:
+    driver: bridge
