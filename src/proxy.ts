@@ -71,10 +71,15 @@ export const config = {
   matcher: [
     /**
      * Wszystko poza zasobami, które muszą odpowiadać bez logowania:
-     * - /health — healthcheck kontenera (Docker nie wyśle nagłówka Authorization)
-     * - /_next/static, /_next/image — artefakty builda
+     *
+     * - `/health` — healthcheck kontenera (Docker nie wyśle nagłówka Authorization)
+     * - `/api/media/file` — pliki wgrane w CMS-ie. Optymalizator obrazów Next-a
+     *   pobiera je sam z siebie zwykłym HTTP, bez danych logowania; gdyby wpadał
+     *   na 401, wszystkie zdjęcia byłyby zepsute. Kompromis: kto zna dokładną
+     *   nazwę pliku, pobierze go bez hasła — strony, treść i panel zostają zamknięte.
+     * - `/_next/static`, `/_next/image` — artefakty builda
      * - favicon
      */
-    '/((?!health|_next/static|_next/image|favicon.svg).*)',
+    '/((?!health|api/media/file|_next/static|_next/image|favicon.svg).*)',
   ],
 }
