@@ -9,14 +9,21 @@ export const EmptyHome = () => (
     <Container size="narrow">
       <div className="rounded-banto-xl bg-white p-10 text-center shadow-banto">
         <h1 className="text-3xl">Landing czeka na treść</h1>
-        <p className="mt-4 leading-relaxed text-muted">
-          W CMS-ie nie ma jeszcze strony o slugu <code className="font-mono">home</code>. Uruchom{' '}
-          <code className="rounded bg-cream px-2 py-1 font-mono text-sm">npm run seed</code>, żeby
-          wgrać treści startowe, albo utwórz stronę ręcznie w panelu.
+        <p className="mt-4 leading-relaxed text-muted text-pretty">
+          W CMS-ie nie ma jeszcze strony o slugu <code className="font-mono">home</code>. Zaloguj
+          się w panelu i wgraj treści startowe albo złóż stronę z bloków ręcznie.
         </p>
-        <div className="mt-8 flex justify-center gap-3">
+
+        <div className="mt-8 flex flex-wrap justify-center gap-3">
           <ButtonLink href="/admin">Otwórz panel</ButtonLink>
+          <ButtonLink href="/next/seed" variant="ghost">
+            Wgraj treści startowe
+          </ButtonLink>
         </div>
+
+        <p className="mt-6 text-sm text-muted-light">
+          Lokalnie to samo zrobi <code className="font-mono">npm run seed</code>.
+        </p>
       </div>
     </Container>
   </div>

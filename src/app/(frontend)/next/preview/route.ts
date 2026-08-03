@@ -2,7 +2,9 @@ import configPromise from '@payload-config'
 import { draftMode } from 'next/headers'
 import { redirect } from 'next/navigation'
 import type { NextRequest } from 'next/server'
-import { getPayload, type PayloadRequest } from 'payload'
+import { getPayload } from 'payload'
+
+import { getUserFromRequest } from '@/utilities/getUserFromRequest'
 
 /**
  * Włącza tryb podglądu. Wymaga jednocześnie poprawnego sekretu (z URL-a
@@ -24,18 +26,7 @@ export async function GET(req: NextRequest): Promise<Response> {
 
   const payload = await getPayload({ config: configPromise })
 
-  let user
-  try {
-    const auth = await payload.auth({
-      req: req as unknown as PayloadRequest,
-      headers: req.headers,
-    })
-    user = auth.user
-  } catch (error) {
-    payload.logger.error({ err: error }, 'Nie udało się zweryfikować sesji podglądu')
-    return new Response('Brak dostępu do podglądu', { status: 403 })
-  }
-
+  const user = await getUserFromRequest(payload, req)
   const draft = await draftMode()
 
   if (!user) {

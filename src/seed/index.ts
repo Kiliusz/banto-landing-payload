@@ -33,35 +33,28 @@ const CATEGORIES = [
 /** Wszystkie operacje seedu wyłączają rewalidację — nie ma jeszcze cache'u do odświeżenia. */
 const ctx = { context: { disableRevalidate: true } }
 
+/**
+ * Wgrywa treści startowe.
+ *
+ * `author` podajemy, gdy seed leci z panelu (endpoint /next/seed) — wtedy
+ * autorem wpisów zostaje zalogowany administrator i nie zakładamy nowego konta.
+ * `adminEmail`/`adminPassword` są używane tylko przez CLI (`npm run seed`),
+ * gdzie w bazie może nie być jeszcze żadnego użytkownika.
+ */
 export const seed = async ({
   payload,
+  author,
   adminEmail,
   adminPassword,
 }: {
   payload: Payload
-  adminEmail: string
-  adminPassword: string
+  author?: { id: number | string }
+  adminEmail?: string
+  adminPassword?: string
 }) => {
   payload.logger.info('— Seed: administrator')
 
-  const existingUsers = await payload.find({
-    collection: 'users',
-    limit: 1,
-    where: { email: { equals: adminEmail } },
-  })
-
-  const admin =
-    existingUsers.docs[0] ??
-    (await payload.create({
-      collection: 'users',
-      data: {
-        email: adminEmail,
-        password: adminPassword,
-        name: 'Administrator banto',
-        role: 'admin',
-      },
-      ...ctx,
-    }))
+  const admin = author ?? (await ensureAdmin(payload, adminEmail, adminPassword))
 
   payload.logger.info('— Seed: media')
 
@@ -326,6 +319,28 @@ export const seed = async ({
   })
 
   payload.logger.info('✔ Seed zakończony')
+}
+
+/** Znajduje albo zakłada konto administratora — używane wyłącznie przez CLI. */
+const ensureAdmin = async (payload: Payload, email?: string, password?: string) => {
+  if (!email || !password) {
+    throw new Error('Seed bez zalogowanego użytkownika wymaga adresu e-mail i hasła administratora.')
+  }
+
+  const existing = await payload.find({
+    collection: 'users',
+    limit: 1,
+    where: { email: { equals: email } },
+  })
+
+  return (
+    existing.docs[0] ??
+    (await payload.create({
+      collection: 'users',
+      data: { email, password, name: 'Administrator banto', role: 'admin' },
+      ...ctx,
+    }))
+  )
 }
 
 /**
