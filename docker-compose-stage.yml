@@ -28,13 +28,20 @@ services:
       postgres:
         condition: service_healthy
     environment:
-      NODE_ENV: production
+      # Wartości z zakładki „Environment" w Dokploy. Compose wstawia je tutaj —
+      # sama obecność zmiennej w panelu NIE trafia automatycznie do kontenera,
+      # musi być wypisana poniżej. Po `:-` stoją bezpieczne wartości domyślne.
+      NODE_ENV: ${NODE_ENV:-production}
+      PORT: ${PORT:-3000}
       DATABASE_URL: postgres://banto:${POSTGRES_PASSWORD}@postgres:5432/banto
       PAYLOAD_SECRET: ${PAYLOAD_SECRET}
       PREVIEW_SECRET: ${PREVIEW_SECRET}
       NEXT_PUBLIC_SERVER_URL: ${NEXT_PUBLIC_SERVER_URL}
       MAILERLITE_API_KEY: ${MAILERLITE_API_KEY:-}
       MAILERLITE_GROUP_ID: ${MAILERLITE_GROUP_ID:-}
+      # `login:hasło` — zamyka całe stage za basic authem.
+      # Puste = brak zabezpieczenia (tak zostawiamy na produkcji).
+      STAGE_BASIC_AUTH: ${STAGE_BASIC_AUTH:-}
     volumes:
       # Uploady z panelu — muszą przeżyć redeploy
       - media:/app/media

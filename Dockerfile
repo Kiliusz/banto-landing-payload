@@ -69,8 +69,10 @@ USER nextjs
 
 EXPOSE 3000
 
+# /health jest wyłączone spod basic autha, więc działa też na stage.
+# Port bierzemy ze zmiennej, żeby healthcheck nie rozjechał się z ENV PORT.
 HEALTHCHECK --interval=30s --timeout=5s --start-period=40s --retries=3 \
-  CMD node -e "fetch('http://127.0.0.1:3000/api/access').then(r=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))"
+  CMD node -e "fetch('http://127.0.0.1:'+(process.env.PORT||3000)+'/health').then(r=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))"
 
 # Migracje bazy odpalają się same przy starcie (prodMigrations w payload.config.ts)
 CMD ["node", "server.js"]
