@@ -3,7 +3,11 @@ import path from 'path'
 import { fileURLToPath } from 'url'
 import type { Payload } from 'payload'
 
+import { childSafetyContent } from './content/childSafety'
+import { deleteAccountContent } from './content/deleteAccount'
 import { privacyPolicyContent } from './content/privacy'
+import { supportContent } from './content/support'
+import { termsContent } from './content/terms'
 import { HERO_MEDIA, seedPosts } from './content/posts'
 
 const dirname = path.dirname(fileURLToPath(import.meta.url))
@@ -120,6 +124,37 @@ export const seed = async ({
         width: 'narrow',
       },
     ],
+  })
+
+  // DRAFT DO AKCEPTACJI PRAWNIKA — cztery strony wymagane przez sklepy (Google Play: polityka
+  // prywatności, usunięcie konta, standardy bezpieczeństwa dzieci; App Store: Support URL).
+  // Treść i zastrzeżenia „DO POTWIERDZENIA" są w plikach w `content/`.
+  const terms = await upsert(payload, 'pages', 'regulamin', {
+    title: 'Regulamin',
+    slug: 'regulamin',
+    _status: 'published',
+    layout: [{ blockType: 'richTextBlock', content: termsContent, width: 'narrow' }],
+  })
+
+  const deleteAccount = await upsert(payload, 'pages', 'usun-konto', {
+    title: 'Usunięcie konta',
+    slug: 'usun-konto',
+    _status: 'published',
+    layout: [{ blockType: 'richTextBlock', content: deleteAccountContent, width: 'narrow' }],
+  })
+
+  const childSafety = await upsert(payload, 'pages', 'bezpieczenstwo-dzieci', {
+    title: 'Standardy bezpieczeństwa dzieci',
+    slug: 'bezpieczenstwo-dzieci',
+    _status: 'published',
+    layout: [{ blockType: 'richTextBlock', content: childSafetyContent, width: 'narrow' }],
+  })
+
+  const support = await upsert(payload, 'pages', 'wsparcie', {
+    title: 'Wsparcie',
+    slug: 'wsparcie',
+    _status: 'published',
+    layout: [{ blockType: 'richTextBlock', content: supportContent, width: 'narrow' }],
   })
 
   await upsert(payload, 'pages', 'home', {
@@ -292,6 +327,26 @@ export const seed = async ({
                 reference: { relationTo: 'pages', value: privacy.id },
                 label: 'Polityka Prywatności',
               },
+            },
+            {
+              link: { type: 'reference', reference: { relationTo: 'pages', value: terms.id }, label: 'Regulamin' },
+            },
+            {
+              link: {
+                type: 'reference',
+                reference: { relationTo: 'pages', value: childSafety.id },
+                label: 'Bezpieczeństwo dzieci',
+              },
+            },
+            {
+              link: {
+                type: 'reference',
+                reference: { relationTo: 'pages', value: deleteAccount.id },
+                label: 'Usunięcie konta',
+              },
+            },
+            {
+              link: { type: 'reference', reference: { relationTo: 'pages', value: support.id }, label: 'Wsparcie' },
             },
             { link: { type: 'custom', url: 'mailto:kontakt@banto.pl', label: 'kontakt@banto.pl' } },
           ],
