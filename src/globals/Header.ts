@@ -15,7 +15,7 @@ export const Header: GlobalConfig = {
       name: 'navItems',
       type: 'array',
       label: 'Menu',
-      maxRows: 6,
+      maxRows: 8,
       labels: { singular: 'Pozycja', plural: 'Pozycje' },
       fields: [linkField({ appearances: false })],
       admin: {
