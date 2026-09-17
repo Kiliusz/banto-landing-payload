@@ -191,7 +191,16 @@ export interface HeroBlock {
    */
   eyebrow?: string | null;
   /**
-   * Fragment w *gwiazdkach* zostanie wyróżniony różowym kolorem, np. „dla *dziecięcych ekip*".
+   * Opcjonalne. Jeśli wypełnione, przed „Nagłówkiem" pojawi się animowana, cyklicznie zmieniająca się fraza (np. „Bezpieczne miejsce" → „Cyfrowa twierdza" → …). Zostaw puste, żeby wyłączyć animację.
+   */
+  rotatingWords?:
+    | {
+        text: string;
+        id?: string | null;
+      }[]
+    | null;
+  /**
+   * Fragment w *gwiazdkach* zostanie wyróżniony różowym kolorem, np. „dla *dziecięcych ekip*". Gdy powyżej wypełniono „Zmieniające się słowa", ten tekst pojawi się zaraz po nich.
    */
   heading: string;
   subheading?: string | null;
@@ -199,6 +208,10 @@ export interface HeroBlock {
    * Jeśli puste, użyjemy domyślnej grafiki z dziećmi.
    */
   image?: (number | null) | Media;
+  /**
+   * Opcjonalne. Nakłada się na główne zdjęcie (np. maskotka wystająca zza telefonu). Zostaw puste, żeby pokazać tylko jedno zdjęcie.
+   */
+  secondaryImage?: (number | null) | Media;
   showWaitlistForm?: boolean | null;
   formHeading?: string | null;
   caption?: string | null;
@@ -779,9 +792,16 @@ export interface PagesSelect<T extends boolean = true> {
  */
 export interface HeroBlockSelect<T extends boolean = true> {
   eyebrow?: T;
+  rotatingWords?:
+    | T
+    | {
+        text?: T;
+        id?: T;
+      };
   heading?: T;
   subheading?: T;
   image?: T;
+  secondaryImage?: T;
   showWaitlistForm?: T;
   formHeading?: T;
   caption?: T;

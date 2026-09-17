@@ -7,11 +7,15 @@ import { WaitlistForm } from '@/components/WaitlistForm'
 import { Container } from '@/components/ui/Container'
 import { getPrivacyHref, getSiteSettings } from '@/utilities/getGlobals'
 
+import { RotatingWord } from './RotatingWord'
+
 export type HeroProps = {
   eyebrow?: string | null
+  rotatingWords?: ({ text: string; id?: string | null } | null)[] | null
   heading: string
   subheading?: string | null
   image?: MediaDoc | string | number | null
+  secondaryImage?: MediaDoc | string | number | null
   showWaitlistForm?: boolean | null
   formHeading?: string | null
   caption?: string | null
@@ -28,11 +32,25 @@ const Dots = () => (
 )
 
 export const HeroComponent = async (props: HeroProps) => {
-  const { caption, eyebrow, formHeading, heading, image, links, showWaitlistForm, subheading } =
-    props
+  const {
+    caption,
+    eyebrow,
+    formHeading,
+    heading,
+    image,
+    secondaryImage,
+    links,
+    rotatingWords,
+    showWaitlistForm,
+    subheading,
+  } = props
 
   const settings = showWaitlistForm ? await getSiteSettings() : null
   const privacyHref = showWaitlistForm ? await getPrivacyHref() : null
+
+  const words = (rotatingWords ?? [])
+    .map((item) => item?.text?.trim())
+    .filter((text): text is string => Boolean(text))
 
   return (
     <section className="relative overflow-hidden bg-cream pt-10 pb-16 sm:pt-16 sm:pb-24" id="hero">
@@ -57,6 +75,7 @@ export const HeroComponent = async (props: HeroProps) => {
             )}
 
             <h1 className="text-4xl leading-[1.06] sm:text-5xl lg:text-[3.4rem]">
+              {words.length > 0 && <RotatingWord className="mr-2" words={words} />}
               <HighlightedHeading text={heading} />
             </h1>
 
@@ -102,6 +121,16 @@ export const HeroComponent = async (props: HeroProps) => {
               resource={image}
               sizes="(max-width: 1024px) 100vw, 620px"
             />
+            {secondaryImage && (
+              <div className="absolute -bottom-8 -left-6 z-10 w-[34%] min-w-[100px] max-w-[190px] drop-shadow-banto-sm sm:-bottom-10 sm:-left-10">
+                <Media
+                  className="h-auto w-full"
+                  priority
+                  resource={secondaryImage}
+                  sizes="(max-width: 1024px) 35vw, 190px"
+                />
+              </div>
+            )}
           </div>
         </div>
       </Container>
