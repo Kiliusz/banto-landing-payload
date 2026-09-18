@@ -16,16 +16,31 @@ const textNode = (text: string, format = 0) => ({
   version: 1,
 })
 
-/** `**pogrubienie**` → węzeł tekstowy z formatem bold. */
+/** `[etykieta](/adres)` → węzeł linku Payloada (LinkFeature, `linkType: 'custom'`). */
+const linkNode = (label: string, url: string) => ({
+  type: 'link',
+  format: '',
+  indent: 0,
+  version: 3,
+  direction: 'ltr' as const,
+  fields: { linkType: 'custom' as const, url, newTab: false },
+  children: [textNode(label)],
+})
+
+/**
+ * `**pogrubienie**` → węzeł tekstowy z formatem bold,
+ * `[etykieta](/adres)` → węzeł linku. Pozostały tekst zostaje zwykłym tekstem.
+ */
 const inline = (text: string) =>
   text
-    .split(/(\*\*[^*]+\*\*)/g)
+    .split(/(\*\*[^*]+\*\*|\[[^\]]+\]\([^)]+\))/g)
     .filter(Boolean)
-    .map((part) =>
-      part.startsWith('**') && part.endsWith('**')
-        ? textNode(part.slice(2, -2), 1)
-        : textNode(part),
-    )
+    .map((part) => {
+      if (part.startsWith('**') && part.endsWith('**')) return textNode(part.slice(2, -2), 1)
+      const link = /^\[([^\]]+)\]\(([^)]+)\)$/.exec(part)
+      if (link) return linkNode(link[1]!, link[2]!)
+      return textNode(part)
+    })
 
 export const p = (text: string) => ({
   type: 'paragraph',

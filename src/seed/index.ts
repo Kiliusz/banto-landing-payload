@@ -3,8 +3,13 @@ import path from 'path'
 import { fileURLToPath } from 'url'
 import type { Payload } from 'payload'
 
+import { childSafetyContent } from './content/childSafety'
+import { deleteAccountContent } from './content/deleteAccount'
 import { privacyPolicyContent } from './content/privacy'
+import { supportContent } from './content/support'
+import { termsContent } from './content/terms'
 import { HERO_MEDIA, seedPosts } from './content/posts'
+import { WP_CTA, WP_HERO_CONTENT, WP_HERO_IMAGES, WP_NAV_ORDER, WP_STUB_PAGES } from './content/wordpress'
 
 const dirname = path.dirname(fileURLToPath(import.meta.url))
 const publicDir = path.resolve(dirname, '../../public')
@@ -61,6 +66,16 @@ export const seed = async ({
   const heroImage = await upsertMedia(payload, {
     filePath: path.resolve(publicDir, 'brand/kids.png'),
     alt: 'Grupa uśmiechniętych dzieci siedzących razem',
+  })
+
+  // Zdjęcia hero strony głównej odziedziczone z WordPressa (stage.banto.pl).
+  const wpHeroPrimaryImage = await upsertMedia(payload, {
+    filePath: path.resolve(publicDir, `brand/${WP_HERO_IMAGES.primary.filename}`),
+    alt: WP_HERO_IMAGES.primary.alt,
+  })
+  const wpHeroSecondaryImage = await upsertMedia(payload, {
+    filePath: path.resolve(publicDir, `brand/${WP_HERO_IMAGES.secondary.filename}`),
+    alt: WP_HERO_IMAGES.secondary.alt,
   })
 
   payload.logger.info('— Seed: kategorie')
@@ -122,20 +137,92 @@ export const seed = async ({
     ],
   })
 
+  // DRAFT DO AKCEPTACJI PRAWNIKA — cztery strony wymagane przez sklepy (Google Play: polityka
+  // prywatności, usunięcie konta, standardy bezpieczeństwa dzieci; App Store: Support URL).
+  // Treść i zastrzeżenia „DO POTWIERDZENIA" są w plikach w `content/`.
+  const terms = await upsert(payload, 'pages', 'regulamin', {
+    title: 'Regulamin',
+    slug: 'regulamin',
+    _status: 'published',
+    layout: [{ blockType: 'richTextBlock', content: termsContent, width: 'narrow' }],
+  })
+
+  const deleteAccount = await upsert(payload, 'pages', 'usun-konto', {
+    title: 'Usunięcie konta',
+    slug: 'usun-konto',
+    _status: 'published',
+    layout: [{ blockType: 'richTextBlock', content: deleteAccountContent, width: 'narrow' }],
+  })
+
+  const childSafety = await upsert(payload, 'pages', 'bezpieczenstwo-dzieci', {
+    title: 'Standardy bezpieczeństwa dzieci',
+    slug: 'bezpieczenstwo-dzieci',
+    _status: 'published',
+    layout: [{ blockType: 'richTextBlock', content: childSafetyContent, width: 'narrow' }],
+  })
+
+  const support = await upsert(payload, 'pages', 'wsparcie', {
+    title: 'Wsparcie',
+    slug: 'wsparcie',
+    _status: 'published',
+    layout: [{ blockType: 'richTextBlock', content: supportContent, width: 'narrow' }],
+  })
+
+  payload.logger.info('— Seed: strony z WordPressa (stub)')
+
+  // 8 stron z dawnego menu WP — w WordPressie istniały jako puste tytuły
+  // (nigdy nie zbudowano dla nich treści), więc dostają formularz zapisów
+  // zamiast wymyślonego tekstu marketingowego. Patrz `wp-export/SECTIONS-SUMMARY.md`.
+  const wpPages: Record<string, any> = {}
+  for (const page of WP_STUB_PAGES) {
+    wpPages[page.slug] = await upsert(payload, 'pages', page.slug, {
+      title: page.title,
+      slug: page.slug,
+      _status: 'published',
+      layout: [
+        {
+          blockType: 'hero',
+          heading: page.title,
+          showWaitlistForm: true,
+        },
+      ],
+    })
+  }
+
   await upsert(payload, 'pages', 'home', {
     title: 'Strona główna',
     slug: 'home',
     _status: 'published',
     layout: [
       {
+        // Sekcja hero 1:1 z jedynej realnej treści starego WordPressa
+        // (`wp-export/pages/banto.json`) — reszta bloków strony głównej
+        // (kafelki, kroki, wpisy, FAQ, zapisy) zostaje bez zmian.
         blockType: 'hero',
-        eyebrow: 'Premiera już wkrótce',
-        heading: 'Tworzymy bezpieczną przestrzeń dla *dziecięcych ekip.*',
-        subheading: 'Dla dzieci 8–12 lat i ich rodziców. Premiera już wkrótce.',
-        image: heroImage?.id,
-        showWaitlistForm: true,
-        formHeading: 'Zapisz się na listę oczekujących i otrzymaj wcześniejszy dostęp.',
-        caption: 'Pierwsze 500 rodzin otrzyma wcześniejszy dostęp.',
+        rotatingWords: WP_HERO_CONTENT.rotatingWords,
+        heading: WP_HERO_CONTENT.heading,
+        subheading: WP_HERO_CONTENT.subheading,
+        image: wpHeroPrimaryImage?.id,
+        secondaryImage: wpHeroSecondaryImage?.id,
+        showWaitlistForm: false,
+        links: [
+          {
+            link: {
+              type: 'reference',
+              reference: { relationTo: 'pages', value: wpPages[WP_CTA.slug]?.id },
+              label: WP_HERO_CONTENT.primaryButtonLabel,
+              appearance: 'primary',
+            },
+          },
+          {
+            link: {
+              type: 'reference',
+              reference: { relationTo: 'pages', value: wpPages['bezpieczenstwo']?.id },
+              label: WP_HERO_CONTENT.secondaryButtonLabel,
+              appearance: 'secondary',
+            },
+          },
+        ],
       },
       {
         blockType: 'features',
@@ -261,12 +348,17 @@ export const seed = async ({
   await payload.updateGlobal({
     slug: 'header',
     data: {
-      navItems: [
-        { link: { type: 'custom', url: '/#hero', label: 'O banto' } },
-        { link: { type: 'reference', reference: { relationTo: 'pages', value: privacy.id }, label: 'Prywatność' } },
-        { link: { type: 'custom', url: '/blog', label: 'Blog' } },
-      ],
-      cta: { enabled: true, label: 'Dołącz do listy', anchor: '#zapisy' },
+      // Menu "Main" z WordPressa (`INVENTORY.md` §3) — "Pobierz" tam był
+      // stylizowany jako wypełniony przycisk, więc tutaj ląduje w `cta`
+      // zamiast wśród zwykłych pozycji.
+      navItems: WP_NAV_ORDER.map((slug) => ({
+        link: {
+          type: 'reference' as const,
+          reference: { relationTo: 'pages' as const, value: wpPages[slug]?.id },
+          label: wpPages[slug]?.title ?? slug,
+        },
+      })),
+      cta: { enabled: true, label: WP_CTA.label, anchor: `/${WP_CTA.slug}` },
     },
     ...ctx,
   })
@@ -292,6 +384,26 @@ export const seed = async ({
                 reference: { relationTo: 'pages', value: privacy.id },
                 label: 'Polityka Prywatności',
               },
+            },
+            {
+              link: { type: 'reference', reference: { relationTo: 'pages', value: terms.id }, label: 'Regulamin' },
+            },
+            {
+              link: {
+                type: 'reference',
+                reference: { relationTo: 'pages', value: childSafety.id },
+                label: 'Bezpieczeństwo dzieci',
+              },
+            },
+            {
+              link: {
+                type: 'reference',
+                reference: { relationTo: 'pages', value: deleteAccount.id },
+                label: 'Usunięcie konta',
+              },
+            },
+            {
+              link: { type: 'reference', reference: { relationTo: 'pages', value: support.id }, label: 'Wsparcie' },
             },
             { link: { type: 'custom', url: 'mailto:kontakt@banto.pl', label: 'kontakt@banto.pl' } },
           ],
