@@ -1,7 +1,7 @@
 {
   "name": "banto-landing",
   "version": "1.0.0",
-  "description": "banto — landing page + blog na Payload CMS 3 i Next.js 16",
+  "description": "banto \u2014 landing page + blog na Payload CMS 3 i Next.js 16",
   "license": "UNLICENSED",
   "private": true,
   "type": "module",
@@ -22,22 +22,22 @@
     "db:down": "docker compose down"
   },
   "dependencies": {
-    "@payloadcms/db-postgres": "3.87.0",
-    "@payloadcms/live-preview-react": "3.87.0",
-    "@payloadcms/next": "3.87.0",
-    "@payloadcms/plugin-seo": "3.87.0",
-    "@payloadcms/richtext-lexical": "3.87.0",
-    "@payloadcms/translations": "3.87.0",
-    "@payloadcms/ui": "3.87.0",
+    "@payloadcms/db-postgres": "^3.91.0",
+    "@payloadcms/live-preview-react": "^3.91.0",
+    "@payloadcms/next": "^3.91.0",
+    "@payloadcms/plugin-seo": "^3.91.0",
+    "@payloadcms/richtext-lexical": "^3.91.0",
+    "@payloadcms/translations": "^3.91.0",
+    "@payloadcms/ui": "^3.91.0",
     "clsx": "2.1.1",
     "cross-env": "10.1.0",
     "dotenv": "16.4.7",
     "graphql": "^16.8.1",
-    "next": "16.2.12",
-    "payload": "3.87.0",
+    "next": "^16.4.3",
+    "payload": "^3.91.0",
     "react": "19.2.6",
     "react-dom": "19.2.6",
-    "sharp": "0.35.3",
+    "sharp": "^0.35.5",
     "tailwind-merge": "3.4.0"
   },
   "devDependencies": {
@@ -48,7 +48,7 @@
     "@types/react-dom": "19.2.3",
     "eslint": "^9.16.0",
     "eslint-config-next": "16.2.12",
-    "postcss": "^8.5.6",
+    "postcss": "^8.5.23",
     "prettier": "^3.4.2",
     "tailwindcss": "4.3.3",
     "tsx": "4.22.4",
@@ -56,5 +56,11 @@
   },
   "engines": {
     "node": ">=22.12.0"
+  },
+  "overrides": {
+    "postcss": "$postcss",
+    "happy-dom": "^21.0.4",
+    "postcss-selector-parser": "^6.1.5",
+    "esbuild": "^0.28.1"
   }
 }
